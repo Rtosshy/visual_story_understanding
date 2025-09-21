@@ -1,0 +1,33 @@
+Bootstrap: docker
+From: nvidia/cuda:12.9.1-base-ubuntu22.04
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    git \
+    build-essential
+
+    echo "==> Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="opt/bin" sh
+    
+    export PATH="/opt/bin:$PATH"
+
+    uv --version
+
+    PYTHON_VERSION="3.13.7"
+    echo "==> Installing Python ${PYTHON_VERSION} with uv..."
+    uv python install "${PYTHON_VERSION}"
+    
+    echo "==> Cleaning up build dependencies..."
+    apt-get purge -y --auto-remove build-essential
+    apt-get clean
+    rm -rf /var/lib/apt/lists/*
+
+%environment
+    export PATH="/opt/bin:$PATH"
+
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8

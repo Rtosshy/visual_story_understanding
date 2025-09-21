@@ -12,3 +12,5 @@ wheels/
 dataset/
 unsloth_compiled_cache/
 .env
+
+*.sif
