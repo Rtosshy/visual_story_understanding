@@ -43,22 +43,22 @@ if __name__ == "__main__":
 
         break
 
-        # m = re.search(r"\d+", generated)
-        # if m:
-        #     pred = m.group()  # 抽出した数字文字列
-        # else:
-        #     pred = None  # 見つからなかった場合
+    # m = re.search(r"\d+", generated)
+    # if m:
+    #     pred = m.group()  # 抽出した数字文字列
+    # else:
+    #     pred = None  # 見つからなかった場合
 
-        # record = {
-        #     "story_id": data["story_id"],
-        #     "question": data["question"],
-        #     "answer": data["answer"],
-        #     "option": data["option"],
-        #     "answer_idx": data["answer_idx"],
-        #     "drop_pos": data["drop_pos"],
-        #     "generated": generated,
-        #     "pred": pred,
-        # }
-        # f_out.write(json.dumps(record, ensure_ascii=False) + "\n")
+    # record = {
+    #     "story_id": data["story_id"],
+    #     "question": data["question"],
+    #     "answer": data["answer"],
+    #     "option": data["option"],
+    #     "answer_idx": data["answer_idx"],
+    #     "drop_pos": data["drop_pos"],
+    #     "generated": generated,
+    #     "pred": pred,
+    # }
+    # f_out.write(json.dumps(record, ensure_ascii=False) + "\n")
 
     # f_out.close()

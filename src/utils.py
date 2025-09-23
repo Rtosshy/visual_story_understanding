@@ -23,7 +23,7 @@ def env(key: str, default: str | None = None, required: bool = False) -> str | N
 
 def load_image(image_id):
     for ext in ("jpg", "png"):
-        img_path = VIST_IMAGE_ROOT / f"{image_id}.{ext}"
+        img_path = VIST_IMAGE_ROOT / "test" / f"{image_id}.{ext}"
         if img_path.exists():
             return Image.open(img_path)
     raise FileNotFoundError(f"No image found for {image_id} with .jpg or .png")
