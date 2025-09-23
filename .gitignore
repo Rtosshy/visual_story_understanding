@@ -13,4 +13,6 @@ dataset/vist/image/
 unsloth_compiled_cache/
 .env
 
+*.sif
+
 *.tar.gz
