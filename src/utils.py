@@ -1,8 +1,11 @@
 import base64
+import json
 import os
+import re
 from pathlib import Path
 
 from dotenv import load_dotenv
+from num2words import num2words
 from PIL import Image
 
 from src.paths import DOTENV_PATH, VIST_IMAGE_ROOT
@@ -24,6 +27,16 @@ def load_image(image_id):
         if img_path.exists():
             return Image.open(img_path)
     raise FileNotFoundError(f"No image found for {image_id} with .jpg or .png")
+
+
+def load_json(path):
+    with path.open("r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def convert_numbers_to_words(text: str) -> str:
+    # 連続する数字をまとめて変換
+    return re.sub(r"\d+", lambda m: num2words(int(m.group()), lang="en"), text)
 
 
 def encode_image_to_base64(image_path: Path) -> str:
@@ -66,7 +79,7 @@ def convert_to_conversation(sample):
     conversation = [
         {"role": "user", "content": content},
     ]
-    return {"messages": conversation}
+    return conversation
 
 
 def convert_to_messages(sample):
