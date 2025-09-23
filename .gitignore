@@ -9,6 +9,8 @@ wheels/
 # Virtual environments
 .venv
 
-dataset/
+dataset/vist/image/
 unsloth_compiled_cache/
 .env
+
+*.tar.gz
