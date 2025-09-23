@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+from src.paths import OUTPUT_ROOT
+
 
 def evaluate(jsonl_path):
     total = 0  # 総データ数
@@ -58,5 +60,5 @@ def evaluate(jsonl_path):
 
 
 if __name__ == "__main__":
-    jsonl_file = "qwen2-5-VL.jsonl"
+    jsonl_file = OUTPUT_ROOT / "qwen2-5-VL.jsonl"
     evaluate(jsonl_file)

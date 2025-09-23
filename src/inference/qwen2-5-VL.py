@@ -1,12 +1,12 @@
 import json
 import re
-from pathlib import Path
 
 from tqdm import tqdm
 from unsloth import FastVisionModel
 
-from ..dataset import get_vist_dataset
-from ..utils import convert_to_conversation
+from src.dataset import get_vist_dataset
+from src.paths import ORIGINAL_ROOT, OUTPUT_ROOT
+from src.utils import convert_to_conversation
 
 model, tokenizer = FastVisionModel.from_pretrained(
     "unsloth/Qwen2.5-VL-7B-Instruct-bnb-4bit",
@@ -17,10 +17,10 @@ model, tokenizer = FastVisionModel.from_pretrained(
 FastVisionModel.for_inference(model)
 
 if __name__ == "__main__":
-    dataset_path = Path(".") / "notebook" / "eda" / "vist_final.jsonl"
+    dataset_path = ORIGINAL_ROOT / "seq2opt.jsonl"
     dataset = get_vist_dataset(dataset_path)
 
-    out_path = Path("qwen2-5-VL.jsonl")
+    out_path = OUTPUT_ROOT / "qwen2-5-VL.jsonl"
     f_out = out_path.open("w", encoding="utf-8")
 
     for data in tqdm(dataset):
