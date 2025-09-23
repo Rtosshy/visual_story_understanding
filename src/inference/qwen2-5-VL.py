@@ -1,11 +1,8 @@
-import json
-import re
-
 from tqdm import tqdm
 from unsloth import FastVisionModel
 
-from src.dataset import get_vist_dataset
-from src.paths import ORIGINAL_ROOT, OUTPUT_ROOT
+from src.dataset import get_seq2opt_dataset
+from src.paths import ORIGINAL_ROOT
 from src.utils import convert_to_conversation
 
 model, tokenizer = FastVisionModel.from_pretrained(
@@ -18,17 +15,17 @@ FastVisionModel.for_inference(model)
 
 if __name__ == "__main__":
     dataset_path = ORIGINAL_ROOT / "seq2opt.jsonl"
-    dataset = get_vist_dataset(dataset_path)
+    dataset = get_seq2opt_dataset(dataset_path)
 
-    out_path = OUTPUT_ROOT / "qwen2-5-VL.jsonl"
-    f_out = out_path.open("w", encoding="utf-8")
+    # out_path = OUTPUT_ROOT / "qwen2-5-VL.jsonl"
+    # f_out = out_path.open("w", encoding="utf-8")
 
     for data in tqdm(dataset):
-        msg = convert_to_conversation(data)
+        conv = convert_to_conversation(data)
 
-        input_text = tokenizer.apply_chat_template(
-            msg["messages"], add_generation_prompt=True
-        )
+        input_text = tokenizer.apply_chat_template(conv, add_generation_prompt=True)
+
+        print(input_text)
 
         inputs = tokenizer(
             images=None,
@@ -44,22 +41,24 @@ if __name__ == "__main__":
 
         generated = response.split("assistant")[-1]
 
-        m = re.search(r"\d+", generated)
-        if m:
-            pred = m.group()  # 抽出した数字文字列
-        else:
-            pred = None  # 見つからなかった場合
+        break
 
-        record = {
-            "story_id": data["story_id"],
-            "question": data["question"],
-            "answer": data["answer"],
-            "option": data["option"],
-            "answer_idx": data["answer_idx"],
-            "drop_pos": data["drop_pos"],
-            "generated": generated,
-            "pred": pred,
-        }
-        f_out.write(json.dumps(record, ensure_ascii=False) + "\n")
+        # m = re.search(r"\d+", generated)
+        # if m:
+        #     pred = m.group()  # 抽出した数字文字列
+        # else:
+        #     pred = None  # 見つからなかった場合
 
-    f_out.close()
+        # record = {
+        #     "story_id": data["story_id"],
+        #     "question": data["question"],
+        #     "answer": data["answer"],
+        #     "option": data["option"],
+        #     "answer_idx": data["answer_idx"],
+        #     "drop_pos": data["drop_pos"],
+        #     "generated": generated,
+        #     "pred": pred,
+        # }
+        # f_out.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+    # f_out.close()
