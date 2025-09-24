@@ -4,12 +4,13 @@ from pathlib import Path
 from src.paths import OUTPUT_ROOT
 
 
-def evaluate(jsonl_path):
+def evaluate(jsonl_path: Path) -> None:
     total = 0  # 総データ数
     correct = 0  # 正しく予測できた数
     wrong = 0  # 誤予測の数（pred=None も含む）
     none_pred = 0  # pred が None の数
     wrong_non_none = 0  # pred が None 以外で誤った数
+    correct_indices = []  # 正解した行番号
     none_pred_indices = []  # pred=None の行番号
     wrong_non_none_indices = []  # pred があり非Noneで誤った行番号
 
@@ -44,6 +45,7 @@ def evaluate(jsonl_path):
             # 正誤判定
             if pred_idx == answer_idx:
                 correct += 1
+                correct_indices.append(idx)
             else:
                 wrong += 1
                 wrong_non_none += 1
@@ -55,10 +57,11 @@ def evaluate(jsonl_path):
     print(f"正解数               : {correct}")
     print(f"誤り数               : {wrong} (うち pred=None: {none_pred})")
     print(f"正答率               : {accuracy:.2%}")
+    print(f"正解の行番号          : {correct_indices}")
     print(f"pred=None の行番号    : {none_pred_indices}")
-    print(f"誤答(非None)の行番号 : {wrong_non_none_indices}")
+    print(f"誤答(非None)の行番号   : {wrong_non_none_indices}")
 
 
 if __name__ == "__main__":
-    jsonl_file = OUTPUT_ROOT / "qwen2-5-VL.jsonl"
-    evaluate(jsonl_file)
+    jsonl_path = OUTPUT_ROOT / "qwen2-5-VL.jsonl"
+    evaluate(jsonl_path)

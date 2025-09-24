@@ -21,27 +21,59 @@ def env(key: str, default: str | None = None, required: bool = False) -> str | N
     return value
 
 
-def load_image(image_id):
-    for ext in ("jpg", "png"):
-        img_path = VIST_IMAGE_ROOT / "test" / f"{image_id}.{ext}"
-        if img_path.exists():
-            return Image.open(img_path)
-    raise FileNotFoundError(f"No image found for {image_id} with .jpg or .png")
+IMAGE_EXTS = ("jpg", "jpeg", "png", "JPG", "JPEG", "PNG")
 
 
-def load_json(path):
-    with path.open("r", encoding="utf-8") as f:
-        return json.load(f)
+class ImageProcessor:
+    pass
+
+
+def id_to_path(image_id: str) -> Path:
+    test_dir = VIST_IMAGE_ROOT / "test"
+    for ext in IMAGE_EXTS:
+        image_path = test_dir / f"{image_id}.{ext}"
+        if image_path.exists():
+            return image_path
+        raise FileNotFoundError(
+            f"No image found for {image_id} with extensions: {IMAGE_EXTS}"
+        )
+
+
+def load_image(image_path: Path) -> Image.Image:
+    return Image.open(image_path)
+
+
+def encode_image_to_base64(image_path: Path) -> str:
+    with open(image_path, "rb") as image_file:
+        image_bytes = image_file.read()
+        base64_string = base64.b64encode(image_bytes).decode("utf-8")
+        return base64_string
+
+
+def encode_image_to_url(image_path: Path) -> str:
+    with open(image_path, "rb") as image_file:
+        image = Image.open(image_path)
+        format = image.format.lower()
+        mime = f"image/{'jpeg' if format in ['jpg', 'jpeg'] else format}"
+
+        image_bytes = image_file.read()
+        base64_string = base64.b64encode(image_bytes).decode("utf-8")
+        url = f"data:{mime};base64,{base64_string}"
+        return url
+
+
+def load_json(json_path: Path) -> dict:
+    with json_path.open("r", encoding="utf-8") as json_file:
+        return json.load(json_file)
+
+
+class TextProcessor:
+    pass
 
 
 def convert_numbers_to_words(text: str) -> str:
     # 連続する数字をまとめて変換
     return re.sub(r"\d+", lambda m: num2words(int(m.group()), lang="en"), text)
-
-
-def encode_image_to_base64(image_path: Path) -> str:
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode("utf-8")
 
 
 def convert_to_conversation(sample):
@@ -67,7 +99,8 @@ def convert_to_conversation(sample):
                 idx = i
 
             # 変更: load_image を使って拡張子をフォールバック
-            image = load_image(image_ids[idx])
+            image_path = id_to_path(image_id=image_ids[idx])
+            image = load_image(image_path=image_path)
             content.append({"type": "image", "image": image})
 
     # 選択肢の構成 テキスト
@@ -102,6 +135,9 @@ def convert_to_messages(sample):
                 idx = i - 1
             else:
                 idx = i
+            image_path = id_to_path(image_id=image_ids[idx])
+            url = encode_image_to_url(image_path=image_path)
+            content.append({"type": "image_url", "image_url": {"url": url}})
 
     options = list(sample["option"].values())
     content.append({"type": "text", "text": "\n\nOptions:"})
