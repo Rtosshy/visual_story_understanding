@@ -1,12 +1,15 @@
+import json
+import re
+
 from tqdm import tqdm
 from unsloth import FastVisionModel
 
 from src.dataset import get_seq2opt_dataset
-from src.paths import ORIGINAL_ROOT
+from src.paths import ORIGINAL_ROOT, OUTPUT_ROOT
 from src.utils import convert_to_conversation
 
 model, tokenizer = FastVisionModel.from_pretrained(
-    "unsloth/Qwen2.5-VL-7B-Instruct-bnb-4bit",
+    "unsloth/Qwen2.5-VL-72B-Instruct-bnb-4bit",
     load_in_4bit=True,  # Use 4bit to reduce memory use. False for 16bit LoRA.
     use_gradient_checkpointing="unsloth",  # True or "unsloth" for long context
 )
@@ -17,15 +20,13 @@ if __name__ == "__main__":
     dataset_path = ORIGINAL_ROOT / "seq2opt.jsonl"
     dataset = get_seq2opt_dataset(dataset_path)
 
-    # out_path = OUTPUT_ROOT / "qwen2-5-VL.jsonl"
-    # f_out = out_path.open("w", encoding="utf-8")
+    out_path = OUTPUT_ROOT / "qwen2-5-VL-72B.jsonl"
+    f_out = out_path.open("w", encoding="utf-8")
 
     for data in tqdm(dataset):
         conv = convert_to_conversation(data)
 
         input_text = tokenizer.apply_chat_template(conv, add_generation_prompt=True)
-
-        print(input_text)
 
         inputs = tokenizer(
             images=None,
@@ -41,24 +42,22 @@ if __name__ == "__main__":
 
         generated = response.split("assistant")[-1]
 
-        break
+        m = re.search(r"\d+", generated)
+        if m:
+            pred = m.group()  # 抽出した数字文字列
+        else:
+            pred = None  # 見つからなかった場合
 
-    # m = re.search(r"\d+", generated)
-    # if m:
-    #     pred = m.group()  # 抽出した数字文字列
-    # else:
-    #     pred = None  # 見つからなかった場合
+        record = {
+            "story_id": data["story_id"],
+            "question": data["question"],
+            "answer": data["answer"],
+            "option": data["option"],
+            "answer_idx": data["answer_idx"],
+            "drop_pos": data["drop_pos"],
+            "generated": generated,
+            "pred": pred,
+        }
+        f_out.write(json.dumps(record, ensure_ascii=False) + "\n")
 
-    # record = {
-    #     "story_id": data["story_id"],
-    #     "question": data["question"],
-    #     "answer": data["answer"],
-    #     "option": data["option"],
-    #     "answer_idx": data["answer_idx"],
-    #     "drop_pos": data["drop_pos"],
-    #     "generated": generated,
-    #     "pred": pred,
-    # }
-    # f_out.write(json.dumps(record, ensure_ascii=False) + "\n")
-
-    # f_out.close()
+    f_out.close()

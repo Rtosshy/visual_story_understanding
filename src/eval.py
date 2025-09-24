@@ -63,5 +63,5 @@ def evaluate(jsonl_path: Path) -> None:
 
 
 if __name__ == "__main__":
-    jsonl_path = OUTPUT_ROOT / "qwen2-5-VL.jsonl"
+    jsonl_path = OUTPUT_ROOT / "qwen2-5-VL-72B.jsonl"
     evaluate(jsonl_path)
