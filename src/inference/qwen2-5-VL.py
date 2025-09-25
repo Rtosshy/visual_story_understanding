@@ -5,8 +5,8 @@ from tqdm import tqdm
 from unsloth import FastVisionModel
 
 from src.dataset import get_seq2opt_dataset
-from src.paths import ORIGINAL_ROOT, OUTPUT_ROOT
 from src.utils import convert_to_conversation
+from utils.paths import ORIGINAL_ROOT, OUTPUT_ROOT
 
 model, tokenizer = FastVisionModel.from_pretrained(
     "unsloth/Qwen2.5-VL-72B-Instruct-bnb-4bit",

@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from num2words import num2words
 from PIL import Image
 
-from src.paths import DOTENV_PATH, VIST_IMAGE_ROOT
+from utils.paths import DOTENV_PATH, VIST_IMAGE_ROOT
 
 if DOTENV_PATH.exists():
     load_dotenv(DOTENV_PATH)
@@ -131,13 +131,12 @@ def convert_to_messages(sample):
             content.append({"type": "text", "text": "[Missing Image Position]"})
             is_missing_inserted = True
         else:
-            if is_missing_inserted:
-                idx = i - 1
-            else:
-                idx = i
+            idx = i - 1 if is_missing_inserted else i
             image_path = id_to_path(image_id=image_ids[idx])
             url = encode_image_to_url(image_path=image_path)
-            content.append({"type": "image_url", "image_url": {"url": url}})
+            content.append(
+                {"type": "image_url", "image_url": {"url": url, "detail": "low"}}
+            )
 
     options = list(sample["option"].values())
     content.append({"type": "text", "text": "\n\nOptions:"})

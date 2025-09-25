@@ -4,8 +4,8 @@ import random
 import pandas as pd
 from torch.utils.data import Dataset
 
-from src.paths import VIST_JSON_ROOT
 from src.utils import convert_numbers_to_words, load_json
+from utils.paths import VIST_JSON_ROOT
 
 
 class Seq2optDataset(Dataset):
