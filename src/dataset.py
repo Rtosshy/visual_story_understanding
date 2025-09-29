@@ -4,8 +4,9 @@ import random
 import pandas as pd
 from torch.utils.data import Dataset
 
-from src.utils import convert_numbers_to_words, load_json
-from utils.paths import VIST_JSON_ROOT
+from src.utils.paths import VIST_JSON_ROOT
+from src.utils.text_processor import TextProcessor as tp
+from src.utils.utils import load_json
 
 
 class Seq2optDataset(Dataset):
@@ -46,7 +47,7 @@ def build_seq2opt_dataset(drop_pos: int = 2, n_options: int = 4):
     sis_test_annotations_df = sis_test_annotations_df[0].apply(pd.Series)
 
     sis_test_annotations_df["text"] = sis_test_annotations_df["text"].apply(
-        convert_numbers_to_words
+        tp.convert_numbers_to_words
     )
 
     answer_dict = {}

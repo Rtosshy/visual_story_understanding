@@ -1,7 +1,7 @@
 from pathlib import Path
 
 _THIS_FILE = Path(__file__).resolve()
-PROJECT_ROOT = _THIS_FILE.parent.parent
+PROJECT_ROOT = _THIS_FILE.parent.parent.parent
 
 if not (PROJECT_ROOT / "pyproject.toml").exists():
     raise RuntimeError("Project root not found.")

@@ -1,14 +1,16 @@
 import json
 import re
 from datetime import datetime  # 追加
+from time import sleep
 from typing import Any  # 追加
 
 from openai import OpenAI
 from tqdm import tqdm
 
 from src.dataset import get_seq2opt_dataset
-from src.utils import convert_to_messages, env
-from utils.paths import ORIGINAL_ROOT, OUTPUT_ROOT
+from src.utils.paths import ORIGINAL_ROOT, OUTPUT_ROOT
+from src.utils.text_processor import TextProcessor as tp
+from src.utils.utils import env
 
 MODEL = "gpt-4o"
 OPENAI_API_KEY = env(key="OPENAI_API_KEY", required=True)
@@ -47,15 +49,14 @@ if __name__ == "__main__":
     out_path = OUTPUT_ROOT / "gpt4o.jsonl"
     f_out = out_path.open("a", encoding="utf-8")
 
-    dataset = dataset[195:]
+    dataset = dataset[200:]
 
     max_success_bytes = 0
     max_success_story_id = None
 
     for data in tqdm(dataset):
-        messages = convert_to_messages(data)
+        messages = tp.convert_to_openai_template(sample=data)
 
-        # 追加: このリクエストのペイロードサイズ（概算）
         try:
             payload_bytes = len(json.dumps({"model": MODEL, "messages": messages}))
         except Exception:
@@ -67,8 +68,10 @@ if __name__ == "__main__":
                 messages=messages,
             )
             generated = response.choices[0].message.content
-            m = re.search(r"\d+", generated)
-            pred = m.group() if m else None
+
+            if generated is not None:
+                m = re.search(r"\d+", generated)
+                pred = m.group() if m else None
 
             # ログ: 成功
             _append_payload_log(
@@ -104,6 +107,9 @@ if __name__ == "__main__":
             "pred": pred,
         }
         f_out.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+        print("sleeping 20 seconds to avoid rate limits...")
+        sleep(20)
 
     f_out.close()
 
