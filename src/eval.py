@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from utils.paths import OUTPUT_ROOT
+from src.utils.paths import OUTPUT_ROOT
 
 
 def evaluate(jsonl_path: Path) -> None:
