@@ -41,6 +41,29 @@ class ImageProcessor:
                 print(f"Error processing {png_file}: {e}", file=sys.stderr)
 
     @staticmethod
+    def reduce_jpg_quality_if_large(
+        image_path: Path, max_file_size_mb: float = 10.0, quality: int = 40
+    ) -> None:
+        if not image_path.exists():
+            print(f"Image path {image_path} does not exist.", file=sys.stderr)
+            return
+
+        try:
+            file_size_mb = image_path.stat().st_size / (1024 * 1024)
+            if file_size_mb > max_file_size_mb:
+                with Image.open(image_path) as image_file:
+                    image_file.save(image_path, format="JPEG", quality=quality)
+                print(
+                    f"Reduced quality of {image_path} (size: {file_size_mb:.2f}MB > {max_file_size_mb}MB) to quality {quality}"
+                )
+            else:
+                print(
+                    f"Image {image_path} size {file_size_mb:.2f}MB is within limit, no reduction needed"
+                )
+        except Exception as e:
+            print(f"Error processing {image_path}: {e}", file=sys.stderr)
+
+    @staticmethod
     def get_reduced_jpg_quality_if_large(
         image_path: Path, max_file_size_mb: float = 10.0, quality: int = 40
     ) -> bytes:

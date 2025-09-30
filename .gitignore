@@ -11,6 +11,7 @@ wheels/
 .venv
 
 dataset/vist/image/
+dataset/vist/json/
 unsloth_compiled_cache/
 .env
 

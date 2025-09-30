@@ -49,7 +49,7 @@ if __name__ == "__main__":
     out_path = OUTPUT_ROOT / "gpt4o.jsonl"
     f_out = out_path.open("a", encoding="utf-8")
 
-    dataset = dataset[200:]
+    dataset = dataset[1247:]
 
     max_success_bytes = 0
     max_success_story_id = None

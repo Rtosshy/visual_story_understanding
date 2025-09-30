@@ -11,6 +11,55 @@ class TextProcessor:
         return re.sub(r"\d+", lambda m: num2words(int(m.group()), lang="en"), text)
 
     @staticmethod
+    def convert_to_build_wrong_option_template(sample, target_pos, num_wrong_options):
+        """
+        sample:
+        {
+            "story_id": story_id, int
+            "image_ids": [id0, id1, id2, ...], List[str]
+            "texts": [text0, text1, text2, ...], List[str]
+        }
+        target_pos: int
+        num_wrong_options: int
+        return: massage
+        """
+        image_ids = sample["image_ids"]
+        texts = sample["texts"]
+        assert len(image_ids) == len(texts), "image_ids and texts length mismatch"
+        assert 0 <= target_pos <= len(image_ids), "target_pos out of range"
+
+        instruction = "You are given a coherent story represented by a sequence of images and their captions. "
+
+        content = [
+            {"type": "text", "text": instruction},
+            {"type": "text", "text": "\n\nStory sequence (index, image, caption):\n"},
+        ]
+
+        for idx, (image_id, text) in enumerate(zip(image_ids, texts)):
+            marker = " <== TAGET POSITION" if idx == target_pos else ""
+            content.append({"type": "text", "text": f"({idx}){marker}"})
+            base64_string = ip.encode_image_to_base64(image_id=image_id)
+            url = ip.encode_base64_to_url(base64_string=base64_string)
+            content.append(
+                {"type": "image_url", "image_url": {"url": url, "detail": "low"}}
+            )
+            content.append({"type": "text", "text": text})
+
+        content.append(
+            {
+                "type": "text",
+                "text": "",
+            }
+        )
+
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": content},
+        ]
+
+        return messages
+
+    @staticmethod
     def convert_to_openai_template(sample):
         instruction = "You are given a sequence of images that tell a story, but one image is missing. Choose only the number of the most appropriate option that describes what should happen in the missing image location. Respond with just the index (e.g., 0, 1, 2, ...)."
 
