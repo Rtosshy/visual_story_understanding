@@ -65,7 +65,7 @@ class ImageProcessor:
 
     @staticmethod
     def get_reduced_jpg_quality_if_large(
-        image_path: Path, max_file_size_mb: float = 10.0, quality: int = 40
+        image_path: Path, max_file_size_mb: float = 10.0, quality: int = 60
     ) -> bytes:
         if not image_path.exists():
             print(f"Image path {image_path} does not exist.", file=sys.stderr)
@@ -85,7 +85,7 @@ class ImageProcessor:
                     return reduced_bytes
                 else:
                     buffer = BytesIO()
-                    image_file.save(buffer, format="JPEG", quality=100)
+                    image_file.save(buffer, format="JPEG", quality=75)
                     buffer.seek(0)
                     raw_bytes = buffer.getvalue()
                     print(
