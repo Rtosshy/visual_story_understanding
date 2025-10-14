@@ -136,7 +136,7 @@ class TextProcessor:
 
     @staticmethod
     def convert_to_shuffled_text_template(sample):
-        instruction = ""
+        instruction = "You are given five images representing a sequence of events. You are also given five sentences that describe the same sequence of events, but their order has been shuffled. Rearrange them into the correct sequence. Your answer must be provided in array format only. Example: [1, 3, 4, 0, 2]"
 
         content = [
             {"type": "text", "text": instruction},

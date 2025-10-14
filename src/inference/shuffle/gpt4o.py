@@ -1,6 +1,5 @@
-import datetime
 import json
-import re
+from datetime import datetime
 from time import sleep
 from typing import Any
 
@@ -41,7 +40,7 @@ def _append_payload_log(
 
 if __name__ == "__main__":
     _ensure_payload_log_header()
-    dataset_path = ORIGINAL_ROOT / "shuffle" / "image_option" / "shuffle_data.jsonl"
+    dataset_path = ORIGINAL_ROOT / "shuffle" / "text_option" / "shuffle_data.jsonl"
 
     dataset = get_shuffled_text_dataset(dataset_path)
     output_path = OUTPUT_ROOT / "shuffled_text" / "gpt4o.jsonl"
@@ -65,10 +64,6 @@ if __name__ == "__main__":
             )
             generated = response.choices[0].message.content
 
-            if generated is not None:
-                m = re.search(r"\d+", generated)
-                pred = m.group() if m else None
-
             # ログ: 成功
             _append_payload_log(
                 story_id=data["story_id"],
@@ -90,7 +85,6 @@ if __name__ == "__main__":
             )
             print(f"[error] story_id {data['story_id']} failed: {e}")
             generated = None
-            pred = None
 
         record = {
             "story_id": data["story_id"],
@@ -99,7 +93,6 @@ if __name__ == "__main__":
             "shuffled_texts": data["shuffled_texts"],
             "answer": data["answer"],
             "generated": generated,
-            "pred": pred,
         }
         f_out.write(json.dumps(record, ensure_ascii=False) + "\n")
         print("sleeping 20 seconds to avoid rate limits...")
