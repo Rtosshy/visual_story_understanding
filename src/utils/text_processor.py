@@ -133,3 +133,36 @@ class TextProcessor:
         ]
 
         return messages, images
+
+    @staticmethod
+    def convert_to_shuffled_text_template(sample):
+        instruction = ""
+
+        content = [
+            {"type": "text", "text": instruction},
+            {"type": "text", "text": "\n\nSequence of images:\n"},
+        ]
+
+        image_ids = list(sample["image_ids"])
+
+        for image_id in image_ids:
+            base64_string = ip.encode_image_to_base64(image_id=image_id)
+            url = ip.encode_base64_to_url(base64_string=base64_string)
+            content.append(
+                {"type": "image_url", "image_url": {"url": url, "detail": "low"}}
+            )
+
+        content.append({"type": "text", "text": "\n\nOptions:"})
+        shuffled_texts = list(sample["shuffled_texts"])
+        for i, text in enumerate(shuffled_texts):
+            content.append({"type": "text", "text": f"\n{i}. {text}"})
+
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful assistant. Answer the following question.",
+            },
+            {"role": "user", "content": content},
+        ]
+
+        return messages
