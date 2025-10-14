@@ -152,10 +152,43 @@ class TextProcessor:
                 {"type": "image_url", "image_url": {"url": url, "detail": "low"}}
             )
 
-        content.append({"type": "text", "text": "\n\nOptions:"})
+        content.append({"type": "text", "text": "\n\nSentences:"})
         shuffled_texts = list(sample["shuffled_texts"])
         for i, text in enumerate(shuffled_texts):
             content.append({"type": "text", "text": f"\n{i}. {text}"})
+
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful assistant. Answer the following question.",
+            },
+            {"role": "user", "content": content},
+        ]
+
+        return messages
+
+    @staticmethod
+    def convert_to_shuffled_image_template(sample):
+        instruction = "You are given five sentences representing a sequence of events. You are also given five images that describe the same sequence of events, but their order has been shuffled. Rearrange them into the correct sequence. Your answer must be provided in array format only. Example: [1, 3, 4, 0, 2]"
+
+        content = [
+            {"type": "text", "text": instruction},
+            {"type": "text", "text": "\n\nSequence of sentences:\n"},
+        ]
+
+        texts = list(sample["texts"])
+        for text in texts:
+            content.append({"type": "text", "text": f"\n{text}"})
+
+        shuffled_image_ids = list(sample["shuffled_image_ids"])
+        content.append({"type": "text", "text": "\n\nImages:"})
+        for i, image_id in enumerate(shuffled_image_ids):
+            base64_string = ip.encode_image_to_base64(image_id=image_id)
+            url = ip.encode_base64_to_url(base64_string=base64_string)
+            content.append({"type": "text", "text": f"\n{i}\n"})
+            content.append(
+                {"type": "image_url", "image_url": {"url": url, "detail": "low"}}
+            )
 
         messages = [
             {

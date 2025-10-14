@@ -132,3 +132,34 @@ class ShuffledTextDataset(Dataset):
 
 def get_shuffled_text_dataset(jsonl_path):
     return ShuffledTextDataset(jsonl_path)
+
+
+class ShuffledImageDataset(Dataset):
+    def __init__(self, jsonl_path):
+        self.data = []
+        # JSONL を１行ずつ読み込む
+        with open(jsonl_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                item = json.loads(line)
+                self.data.append(
+                    {
+                        "story_id": item.get("story_id"),
+                        "image_ids": item.get("image_ids"),
+                        "texts": item.get("texts"),
+                        "shuffled_image_ids": item.get("shuffled_image_ids"),
+                        "answer": item.get("answer"),
+                    }
+                )
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx]
+
+
+def get_shuffled_image_dataset(jsonl_path):
+    return ShuffledImageDataset(jsonl_path)

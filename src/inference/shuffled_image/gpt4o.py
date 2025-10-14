@@ -6,7 +6,7 @@ from typing import Any
 from openai import OpenAI
 from tqdm import tqdm
 
-from src.dataset import get_shuffled_text_dataset
+from src.dataset import get_shuffled_image_dataset
 from src.utils.paths import ORIGINAL_ROOT, OUTPUT_ROOT
 from src.utils.text_processor import TextProcessor as tp
 from src.utils.utils import env
@@ -15,7 +15,7 @@ MODEL = "gpt-4o"
 OPENAI_API_KEY = env(key="OPENAI_API_KEY", required=True)
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-PAYLOAD_LOG_PATH = OUTPUT_ROOT / "shuffled_text" / "payload_stats.txt"
+PAYLOAD_LOG_PATH = OUTPUT_ROOT / "shuffled_image" / "payload_stats.txt"
 
 
 def _ensure_payload_log_header():
@@ -40,17 +40,17 @@ def _append_payload_log(
 
 if __name__ == "__main__":
     _ensure_payload_log_header()
-    dataset_path = ORIGINAL_ROOT / "shuffle" / "text_option" / "shuffle_data.jsonl"
+    dataset_path = ORIGINAL_ROOT / "shuffle" / "image_option" / "shuffle_data.jsonl"
 
-    dataset = get_shuffled_text_dataset(dataset_path)
-    output_path = OUTPUT_ROOT / "shuffled_text" / "gpt4o.jsonl"
+    dataset = get_shuffled_image_dataset(dataset_path)
+    output_path = OUTPUT_ROOT / "shuffled_image" / "gpt4o.jsonl"
     f_out = output_path.open("a", encoding="utf-8")
 
     max_success_bytes = 0
     max_success_story_id = None
 
-    for data in tqdm(dataset):
-        messages = tp.convert_to_shuffled_text_template(sample=data)
+    for data in tqdm(dataset[:100]):
+        messages = tp.convert_to_shuffled_image_template(sample=data)
 
         try:
             payload_bytes = len(json.dumps({"model": MODEL, "messages": messages}))
@@ -90,7 +90,7 @@ if __name__ == "__main__":
             "story_id": data["story_id"],
             "image_ids": data["image_ids"],
             "texts": data["texts"],
-            "shuffled_texts": data["shuffled_texts"],
+            "shuffled_texts": data["shuffled_image_ids"],
             "answer": data["answer"],
             "generated": generated,
         }
