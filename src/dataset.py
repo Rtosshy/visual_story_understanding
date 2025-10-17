@@ -103,6 +103,38 @@ def build_seq2opt_dataset(drop_pos: int = 2, n_options: int = 4):
         answer_index_dict[story_id] = correct_index
 
 
+class Seq2OptDatasetWithGenIncorrect(Dataset):
+    def __init__(self, jsonl_path):
+        self.data = []
+
+        with open(jsonl_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                item = json.loads(line)
+                self.data.append(
+                    {
+                        "story_id": item.get("story_id"),
+                        "image_ids": item.get("image_ids"),
+                        "texts": item.get("texts"),
+                        "target_pos": item.get("target_pos"),
+                        "num_incorrect_options": item.get("num_incorrect_options"),
+                        "incorrect_options": item.get("incorrect_options"),
+                    }
+                )
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx]
+
+
+def get_seq2opt_dataset_with_gen_incorrect(jsonl_path):
+    return Seq2OptDatasetWithGenIncorrect(jsonl_path)
+
+
 class ShuffledTextDataset(Dataset):
     def __init__(self, jsonl_path):
         self.data = []

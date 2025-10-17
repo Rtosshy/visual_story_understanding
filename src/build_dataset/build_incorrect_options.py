@@ -17,11 +17,11 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 def main():
     if len(sys.argv) != 3:
         print(
-            "Usage: uv run -m src.build_dataset.build_wrong_options <num_wrong_options> <target_pos>",
+            "Usage: uv run -m src.build_dataset.build_incorrect_options <num_incorrect_options> <target_pos>",
             file=sys.stderr,
         )
         sys.exit(1)
-    num_wrong_options = int(sys.argv[1])
+    num_incorrect_options = int(sys.argv[1])
     target_pos = int(sys.argv[2])
     sis_base_path = ORIGINAL_ROOT / "sis_base.jsonl"
     data = []
@@ -37,13 +37,15 @@ def main():
         ORIGINAL_ROOT
         / "text_option"
         / f"pos{target_pos}"
-        / f"wrong_options_{num_wrong_options}.jsonl"
+        / f"incorrect_options_{num_incorrect_options}.jsonl"
     )
     f_out = out_path.open("a", encoding="utf-8")
 
-    for sample in tqdm(data):
-        messages = tp.convert_to_build_wrong_option_template(
-            sample=sample, num_wrong_options=num_wrong_options, target_pos=target_pos
+    for sample in tqdm(data[:10]):
+        messages = tp.convert_to_build_incorrect_option_template(
+            sample=sample,
+            num_incorrect_options=num_incorrect_options,
+            target_pos=target_pos,
         )
 
         response = client.chat.completions.create(
@@ -65,13 +67,13 @@ def main():
             "image_ids": sample["image_ids"],
             "texts": sample["texts"],
             "target_pos": target_pos,
-            "num_wrong_options": num_wrong_options,
-            "wrong_options": json.loads(generated),
+            "num_incorrect_options": num_incorrect_options,
+            "incorrect_options": json.loads(generated),
         }
         f_out.write(json.dumps(record, ensure_ascii=False) + "\n")
 
-        print("sleeping 10 seconds to avoid rate limits...")
-        sleep(10)
+        print("sleeping 20 seconds to avoid rate limits...")
+        sleep(20)
 
     f_out.close()
 

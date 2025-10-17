@@ -11,7 +11,9 @@ class TextProcessor:
         return re.sub(r"\d+", lambda m: num2words(int(m.group()), lang="en"), text)
 
     @staticmethod
-    def convert_to_build_wrong_option_template(sample, target_pos, num_wrong_options):
+    def convert_to_build_incorrect_option_template(
+        sample, target_pos, num_incorrect_options
+    ):
         """
         sample:
         {
@@ -20,15 +22,36 @@ class TextProcessor:
             "texts": [text0, text1, text2, ...], List[str]
         }
         target_pos: int
-        num_wrong_options: int
-        return: massage
+        num_incorrect_options: int
+        return: messages
         """
         image_ids = sample["image_ids"]
         texts = sample["texts"]
         assert len(image_ids) == len(texts), "image_ids and texts length mismatch"
-        assert 0 <= target_pos <= len(image_ids), "target_pos out of range"
+        assert 0 <= target_pos < len(image_ids), "target_pos out of range"
 
-        instruction = "You are given a coherent story represented by a sequence of images and their captions. "
+        instruction = (
+            f"You are given a coherent story represented by a sequence of images and their captions. "
+            f"Generate {num_incorrect_options} short alternative story snippets to place at position pos={target_pos}. "
+            "Each snippet should be plausible at first glance but ultimately incorrect when considering the full context.\n"
+            "- Important:\n"
+            "  - Options must be discriminative: avoid generic or 'safe' sentences that could fit regardless of what the hidden image shows.\n"
+            "- Constraints:\n"
+            "  - It must be wrong when the entire context (all images and captions) is considered.\n"
+            "  - Maintain narrative coherence with the surrounding captions (smooth connection, consistent viewpoint/tense, causal flow, recurring entities/terminology).\n"
+            "  - Options must be mutually distinct and not trivially easy.\n"
+            "  - Avoid blatantly wrong errors (physical impossibilities, major plot leaps, obvious anachronisms).\n"
+            "  - Limit differences to subtle yet falsifiable mismatches anchored in the visible context (role/agent swap, off-by-one quantity, order swap, location/time confusion, object state/attribute mismatch, cause–effect inversion, identity confusion, etc.).\n"
+            "- Style:\n"
+            "  - Match the length, tone, perspective, and tense of neighboring captions. Use only previously introduced proper nouns. Do not copy captions verbatim, but keep similar wording.\n"
+            "  - Do not use negations or meta commentary (e.g., 'not', 'incorrect'); write natural narration only.\n"
+            "- Prohibited:\n"
+            "  - Introducing major new elements not present in the images, impossible events, breaking world consistency, explanations or reasoning steps.\n"
+            "  - Generic, content-free sentences that would fit almost any scene.\n"
+            "- Output format:\n"
+            '  - Return only a JSON array of strings (no keys). Example: ["Option A", "Option B", "Option C"]\n'
+            "- Language: English."
+        )
 
         content = [
             {"type": "text", "text": instruction},
@@ -36,24 +59,64 @@ class TextProcessor:
         ]
 
         for idx, (image_id, text) in enumerate(zip(image_ids, texts)):
-            marker = " <== TAGET POSITION" if idx == target_pos else ""
+            marker = " <== TARGET POSITION (IMAGE HIDDEN)" if idx == target_pos else ""
             content.append({"type": "text", "text": f"({idx}){marker}"})
-            base64_string = ip.encode_image_to_base64(image_id=image_id)
-            url = ip.encode_base64_to_url(base64_string=base64_string)
-            content.append(
-                {"type": "image_url", "image_url": {"url": url, "detail": "low"}}
-            )
+            if idx == target_pos:
+                # Do not show the target image
+                content.append(
+                    {"type": "text", "text": "[Image at this position is hidden]"}
+                )
+            else:
+                base64_string = ip.encode_image_to_base64(image_id=image_id)
+                url = ip.encode_base64_to_url(base64_string=base64_string)
+                content.append(
+                    {"type": "image_url", "image_url": {"url": url, "detail": "low"}}
+                )
+            # Still provide the original caption text to preserve style/context
             content.append({"type": "text", "text": text})
-
-        content.append(
-            {
-                "type": "text",
-                "text": "",
-            }
-        )
 
         messages = [
             {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": content},
+        ]
+
+        return messages
+
+    @staticmethod
+    def convert_to_incorrect_template(sample):
+        instruction = "You are given a sequence of images that tell a story, but one image is missing. Choose only the number of the most appropriate option that describes what should happen in the missing image location. Respond with just the index (e.g., 0, 1, 2, ...)."
+        content = [
+            {"type": "text", "text": instruction},
+            {"type": "text", "text": "\n\nSequence of images:\n"},
+        ]
+
+        image_ids = list(sample["image_ids"])
+        original_length = len(image_ids)
+
+        is_missing_inserted = False
+        for i in range(original_length + 1):
+            if i == sample["target_pos"] and not is_missing_inserted:
+                content.append({"type": "text", "text": "[Missing Image Position]"})
+                is_missing_inserted = True
+            else:
+                idx = i - 1 if is_missing_inserted else i
+                base64_string = ip.encode_image_to_base64(image_id=image_ids[idx])
+                url = ip.encode_base64_to_url(base64_string=base64_string)
+                content.append(
+                    {"type": "image_url", "image_url": {"url": url, "detail": "low"}}
+                )
+
+        options = list(sample["incorrect_options"])
+        options.append(sample["texts"][sample["target_pos"]])
+        content.append({"type": "text", "text": "\n\nOptions:"})
+        for i, option in enumerate(options):
+            content.append({"type": "text", "text": f"\n{i}. {option}"})
+
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful assistant. Answer the following question.",
+            },
             {"role": "user", "content": content},
         ]
 

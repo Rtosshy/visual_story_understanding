@@ -7,7 +7,7 @@ from typing import Any  # 追加
 from openai import OpenAI
 from tqdm import tqdm
 
-from src.dataset import get_seq2opt_dataset
+from src.dataset import get_seq2opt_dataset_with_gen_incorrect
 from src.utils.paths import ORIGINAL_ROOT, OUTPUT_ROOT
 from src.utils.text_processor import TextProcessor as tp
 from src.utils.utils import env
@@ -17,7 +17,7 @@ OPENAI_API_KEY = env(key="OPENAI_API_KEY", required=True)
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # 追加: ペイロードログのパスとヘッダー初期化
-PAYLOAD_LOG_PATH = OUTPUT_ROOT / "payload_stats.txt"
+PAYLOAD_LOG_PATH = OUTPUT_ROOT / "incorrect_options" / "payload_stats.txt"
 
 
 def _ensure_payload_log_header():
@@ -43,19 +43,17 @@ def _append_payload_log(
 if __name__ == "__main__":
     _ensure_payload_log_header()  # 追加
 
-    dataset_path = ORIGINAL_ROOT / "seq2opt.jsonl"
-    dataset = get_seq2opt_dataset(dataset_path)
+    dataset_path = ORIGINAL_ROOT / "text_option" / "pos2" / "incorrect_options_3.jsonl"
+    dataset = get_seq2opt_dataset_with_gen_incorrect(dataset_path)
 
-    out_path = OUTPUT_ROOT / "gpt4o.jsonl"
+    out_path = OUTPUT_ROOT / "incorrect_options" / "gpt4o.jsonl"
     f_out = out_path.open("a", encoding="utf-8")
-
-    dataset = dataset[1247:]
 
     max_success_bytes = 0
     max_success_story_id = None
 
     for data in tqdm(dataset):
-        messages = tp.convert_to_openai_template(sample=data)
+        messages = tp.convert_to_incorrect_template(sample=data)
 
         try:
             payload_bytes = len(json.dumps({"model": MODEL, "messages": messages}))
@@ -98,11 +96,16 @@ if __name__ == "__main__":
 
         record = {
             "story_id": data["story_id"],
-            "question": data["question"],
-            "answer": data["answer"],
-            "option": data["option"],
-            "answer_idx": data["answer_idx"],
-            "drop_pos": data["drop_pos"],
+            "image_ids": data["image_ids"],
+            "texts": data["texts"],
+            "target_pos": data["target_pos"],
+            "num_incorrect_options": data["num_incorrect_options"],
+            "incorrect_options": data["incorrect_options"],
+            # "question": data["question"],
+            # "answer": data["answer"],
+            # "option": data["option"],
+            # "answer_idx": data["answer_idx"],
+            # "drop_pos": data["drop_pos"],
             "generated": generated,
             "pred": pred,
         }
